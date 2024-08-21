@@ -12,6 +12,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(scales)
 
+output_path <- "C:/Users/mayaol/professional_dev/portfolio/analytics/"
+
 # 1. Investigate dataset
 un_data <- read.csv("C:/Users/mayaol/professional_dev/portfolio/data_sources/un_pop_08_15_2024.csv")
 un_cols <- data.frame(colnames(un_data))
@@ -45,7 +47,7 @@ un_data_1 <- un_data_1 %>%
   mutate(TPopulation1Jan = TPopulation1Jan / 1000)
 
 # Creating world map plot here
-ggplot(data = un_data_1) +
+un_pop_map <- ggplot(data = un_data_1) +
   geom_sf(aes(fill = TPopulation1Jan), color = "black") +
   scale_fill_viridis_c(name = "Population (count, millions)", 
                        labels = label_comma(),
@@ -67,3 +69,6 @@ ggplot(data = un_data_1) +
   labs(title = "World Map with Population, 2015",
        subtitle = "Data from United Nations") +
   theme(legend.position = "bottom")
+
+ggsave(filename = "C:/Users/mayaol/professional_dev/portfolio/analytics/analysis_1_worldmap.jpg", 
+       plot = un_pop_map, width = 10, height = 7)
