@@ -8,3 +8,6 @@ Welcome to my portfolio. My topics of interest are epidemiology, health metrics,
  - 1.3 Calculate each country's Infant Mortality Rate (IMR) and check that it matches what is reported
  - 2.0 World map of population density by country for the year 2015
 
+-----------------------------------------------------------------------
+Sources Used
+UN World Population Prospects 2024 - https://population.un.org/wpp/Download/Standard/MostUsed/
