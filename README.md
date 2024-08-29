@@ -10,9 +10,10 @@ This is my first introductory analysis, using basic functions in R with the dply
  - 03 - Calculate each country's Infant Mortality Rate (IMR) and check that it matches what is reported
  - 04 - World map of population density by country for the year 2015
 
+
 **professional_dev/portfolio/analytics/analysis_02**
 
-After an initial introduction to population data with Analysis_1, I will build on this knowledge by incorporating variables from the World Bank dataset, which focuses on various job & occupational variables.
+After an initial introduction to population data with Analysis_01, I will build on this knowledge by incorporating variables from the World Bank dataset, which focuses on various job & occupational variables.
 
 -----------------------------------------------------------------------
 Sources Used
