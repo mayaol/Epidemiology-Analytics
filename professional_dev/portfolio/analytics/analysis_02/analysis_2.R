@@ -50,9 +50,7 @@ wb_data <- wb_data %>%
     values_from = Value         # Values to fill the new columns
   )
 
-# wb_data <- wb_data %>%
-#   mutate(across(everything(), ~ na_if(.x, "..")))
-
+# Removing redundant country columns
 wb_data <- wb_data %>%
   select(-Country.Name, -Series.Code)
 
@@ -72,9 +70,12 @@ wb_data <- wb_data %>%
   )
 
 # I will be using the GDP per capita, PPP as a way to rank economic productivity of a given country
-# Remove all rows where GDP is not reported
+# Remove all rows where GDP is not reported (and rename variable for readability)
 wb_data <- wb_data %>%
   filter(!is.na(`GDP per capita, PPP (constant 2011 international $)`))
+
+wb_data <- wb_data %>%
+  rename(gdp = `GDP per capita, PPP (constant 2011 international $)`)
 
 # Next, I will merge together the WB data with the UN data to create one singular dataframe
 un_data <- un_data %>%
@@ -91,4 +92,18 @@ wb_data <- wb_data %>%
   mutate(Time = as.numeric(Time)) %>%
   filter(Time >= 1990 & Time <= 2016)
 
-# currently, many of the WB columns are totally blank - need to investigate this
+# 1.1 - Create a scatter plot comparing each country's GDP per capita
+# Subsetting by year = 2016, and analyzing by region
+wb_data_2016 <- filter(wb_data, Time == 2016)
+wb_data_2016 <- wb_data_2016 %>%
+  arrange(gdp)
+
+# NEXT: subset the data based on region. Find an R package that can map ISO3 codes to region
+
+ggplot(wb_data_2016, aes(x = ISO3_code, y = gdp)) +
+  geom_point(size = 3) +  # Add points
+  geom_text(aes(label = ISO3_code), vjust = -1) +  # Add labels
+  labs(title = "GDP per Capita (PPP) by ISO3 Code",
+       x = "ISO3 Code",
+       y = "GDP per Capita (PPP, constant 2011 $)") +
+  theme_minimal()
