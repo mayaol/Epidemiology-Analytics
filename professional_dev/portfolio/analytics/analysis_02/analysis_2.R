@@ -8,6 +8,7 @@ library(rnaturalearthdata)
 library(scales)
 library(purrr)
 library(rworldxtra)
+library(ggrepel)
 
 output_path <- "C:/Users/mayaol/professional_dev/portfolio/analytics/analysis_02/"
 
@@ -96,6 +97,7 @@ wb_data <- wb_data %>%
 # 1.1 - Create a scatter plot comparing each country's GDP per capita
 # Subsetting by year = 2016, and analyzing by region
 wb_data_2016 <- filter(wb_data, Time == 2016)
+wb_data_2016 <- wb_data_2016[ , !duplicated(colnames(wb_data_2016))]
 wb_data_2016 <- wb_data_2016 %>%
   arrange(gdp)
 
@@ -107,15 +109,37 @@ country_data <- countriesHigh@data %>%
 wb_data_2016 <- wb_data_2016 %>%
   left_join(country_data, by = c("ISO3_code" = "ISO_A3"))
 
-# Drop the rows where a region was not identified
+# Drop the rows where a region was not identified, or GDP is unspecified
 wb_data_2016 <- wb_data_2016 %>%
   filter(!is.na(continent) & continent != "")
+wb_data_2016 <- wb_data_2016 %>%
+  filter(!is.na(as.numeric(gsub(",", "", gdp))))
+wb_data_2016$gdp <- as.numeric(as.character(wb_data_2016$gdp))
 
 # Loop through each continent and display a plot for each
-ggplot(wb_data_2016, aes(x = ISO3_code, y = gdp)) +
-  geom_point(size = 3) +  # Add points
-  geom_text(aes(label = ISO3_code), vjust = -1) +  # Add labels
-  labs(title = "GDP per Capita (PPP) by ISO3 Code",
-       x = "ISO3 Code",
-       y = "GDP per Capita (PPP, constant 2011 $)") +
-  theme_minimal()
+plot_path <- paste0(output_path, '01_analysis_2_gdp.pdf')
+loc_names <- unique(wb_data_2016$continent)
+
+# Start the PDF device
+pdf(file = plot_path, width = 16, height = 10)
+
+for (loc in loc_names){
+  
+  gg <- ggplot(wb_data_2016 %>% filter(continent == loc)) +
+    aes(x = Location, y = gdp) +
+    geom_point(size = 3) +
+    geom_label_repel(aes(label = Location), size = 3, nudge_y = 0.5, max.overlaps = Inf) +
+    theme_bw() +
+    expand_limits(y = 0) +
+    scale_y_continuous(labels = scales::comma) +
+    labs(title = paste0('National GDP per Capita (PPP)'),
+         subtitle = paste0('Location: ', loc),
+         x = NULL,
+         y = "GDP/capita") + 
+    theme(axis.text.x = element_blank())
+  print(gg)
+  
+}
+
+# Close the PDF device
+dev.off()
