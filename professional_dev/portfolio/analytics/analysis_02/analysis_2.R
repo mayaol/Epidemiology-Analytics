@@ -7,6 +7,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(scales)
 library(purrr)
+library(rworldxtra)
 
 output_path <- "C:/Users/mayaol/professional_dev/portfolio/analytics/analysis_02/"
 
@@ -98,8 +99,19 @@ wb_data_2016 <- filter(wb_data, Time == 2016)
 wb_data_2016 <- wb_data_2016 %>%
   arrange(gdp)
 
-# NEXT: subset the data based on region. Find an R package that can map ISO3 codes to region
+# Subset the data based on region, merge with WB data
+data(countriesHigh)
+country_data <- countriesHigh@data %>%
+  select(ISO_A3, continent, GEO3)
 
+wb_data_2016 <- wb_data_2016 %>%
+  left_join(country_data, by = c("ISO3_code" = "ISO_A3"))
+
+# Drop the rows where a region was not identified
+wb_data_2016 <- wb_data_2016 %>%
+  filter(!is.na(continent) & continent != "")
+
+# Loop through each continent and display a plot for each
 ggplot(wb_data_2016, aes(x = ISO3_code, y = gdp)) +
   geom_point(size = 3) +  # Add points
   geom_text(aes(label = ISO3_code), vjust = -1) +  # Add labels
