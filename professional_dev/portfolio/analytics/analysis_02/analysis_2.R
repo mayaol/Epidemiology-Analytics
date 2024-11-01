@@ -73,10 +73,10 @@ wb_data <- wb_data %>%
 
 # I will be using the GDP per capita, PPP as a way to rank economic productivity of a given country
 # Remove all rows where GDP is not reported (and rename variable for readability)
-wb_data <- wb_data %>%
+wb_data_gdp <- wb_data %>%
   filter(!is.na(`GDP per capita, PPP (constant 2011 international $)`))
 
-wb_data <- wb_data %>%
+wb_data_gdp <- wb_data_gdp %>%
   rename(gdp = `GDP per capita, PPP (constant 2011 international $)`)
 
 # Next, I will merge together the WB data with the UN data to create one singular dataframe
@@ -87,18 +87,18 @@ un_data <- un_data %>%
 un_data <- un_data %>%
   filter(ISO3_code %in% iso3_codes)
 
-wb_data <- left_join(un_data, wb_data, by = c("ISO3_code" = "Country.Code", "Time" = "Year"))
+wb_data_gdp <- left_join(un_data, wb_data_gdp, by = c("ISO3_code" = "Country.Code", "Time" = "Year"))
 
 # WB Data only goes from 1990 to 2016, so removing all other rows
-wb_data <- wb_data %>%
+wb_data_gdp <- wb_data_gdp %>%
   mutate(Time = as.numeric(Time)) %>%
   filter(Time >= 1990 & Time <= 2016)
 
 # 1.1 - Create a scatter plot comparing each country's GDP per capita
 # Subsetting by year = 2016, and analyzing by region
-wb_data_2016 <- filter(wb_data, Time == 2016)
-wb_data_2016 <- wb_data_2016[ , !duplicated(colnames(wb_data_2016))]
-wb_data_2016 <- wb_data_2016 %>%
+wb_data_gdp_2016 <- filter(wb_data_gdp, Time == 2016)
+wb_data_gdp_2016 <- wb_data_gdp_2016[ , !duplicated(colnames(wb_data_gdp_2016))]
+wb_data_gdp_2016 <- wb_data_gdp_2016 %>%
   arrange(gdp)
 
 # Subset the data based on region, merge with WB data
@@ -106,26 +106,26 @@ data(countriesHigh)
 country_data <- countriesHigh@data %>%
   select(ISO_A3, continent, GEO3)
 
-wb_data_2016 <- wb_data_2016 %>%
+wb_data_gdp_2016 <- wb_data_gdp_2016 %>%
   left_join(country_data, by = c("ISO3_code" = "ISO_A3"))
 
 # Drop the rows where a region was not identified, or GDP is unspecified
-wb_data_2016 <- wb_data_2016 %>%
+wb_data_gdp_2016 <- wb_data_gdp_2016 %>%
   filter(!is.na(continent) & continent != "")
-wb_data_2016 <- wb_data_2016 %>%
+wb_data_gdp_2016 <- wb_data_gdp_2016 %>%
   filter(!is.na(as.numeric(gsub(",", "", gdp))))
-wb_data_2016$gdp <- as.numeric(as.character(wb_data_2016$gdp))
+wb_data_gdp_2016$gdp <- as.numeric(as.character(wb_data_gdp_2016$gdp))
 
 # Loop through each continent and display a plot for each
 plot_path <- paste0(output_path, '01_analysis_2_gdp.pdf')
-loc_names <- unique(wb_data_2016$continent)
+loc_names <- unique(wb_data_gdp_2016$continent)
 
 # Start the PDF device
 pdf(file = plot_path, width = 16, height = 10)
 
 for (loc in loc_names){
   
-  gg <- ggplot(wb_data_2016 %>% filter(continent == loc)) +
+  gg <- ggplot(wb_data_gdp_2016 %>% filter(continent == loc)) +
     aes(x = Location, y = gdp) +
     geom_point(size = 3) +
     geom_label_repel(aes(label = Location), size = 3, nudge_y = 0.5, max.overlaps = Inf) +
