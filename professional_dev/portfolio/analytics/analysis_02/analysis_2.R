@@ -9,6 +9,7 @@ library(scales)
 library(purrr)
 library(rworldxtra)
 library(ggrepel)
+library(countrycode)
 
 output_path <- "C:/Users/mayaol/professional_dev/portfolio/analytics/analysis_02/"
 
@@ -18,11 +19,9 @@ un_cols <- data.frame(colnames(un_data))
 
 wb_data <- read.csv("C:/Users/mayaol/professional_dev/portfolio/data_sources/wb_occupational_09_04_2024.csv")
 
-# Subsetting the WB data to only countries (removing regional rows)
-iso3_codes <- un_data %>%
-  pull(ISO3_code) %>%
-  .[nzchar(.)] %>%
-  unique()
+# Subsetting the WB and UN data to only countries (removing regional rows)
+un_data <- un_data %>%
+  filter(ISO3_code != "")
 
 wb_data <- wb_data %>%
   filter(Country.Code %in% iso3_codes)
@@ -32,29 +31,38 @@ wb_data <- wb_data %>%
   mutate(Series.Name = na_if(Series.Name, "")) %>%
   distinct(Country.Code, Series.Name, .keep_all = TRUE) 
 
+# Year columns include extra letters, updating this here
+colnames(wb_data) <- sapply(colnames(wb_data), function(colname) {
+  if (grepl("^X\\d{4}\\.\\.YR\\d{4}\\.$", colname)) {  # Match year columns
+    # Extract the year (4 digits)
+    return(gsub(".*(\\d{4}).*", "\\1", colname))
+  } else {
+    # Leave non-year columns as they are
+    return(colname)
+  }
+})
+
 wb_data <- wb_data %>%
   pivot_longer(
-    cols = starts_with("X"),       # Select columns starting with "X" (years columns)
-    names_to = "Year",             # Name the new column for year
-    values_to = "Value"            # Name the new column for values
+    cols = matches("^\\d{4}$"),  # Select columns where the name is exactly a 4-digit year (YYYY)
+    names_to = "Year",            # Name the new column for year
+    values_to = "Value"           # Name the new column for values
   ) %>%
-  # Correct the extraction of the year from column names
-  mutate(
-    Year = gsub("^X", "", Year),   # Remove leading 'X'
-    Year = gsub("\\.\\.YR", "", Year),  # Remove '..YR'
-    Year = substr(Year, 1, 4)      # Keep only the first 4 characters if the year is concatenated
-  ) %>%
-  # Ensure the Year column is numeric
-  mutate(Year = as.numeric(Year)) %>%
-  # Pivot wider based on Series.Name
+  # Ensure only one row per combination of Country.Name, Country.Code, Year, and Series.Name
+  group_by(Country.Name, Country.Code, Year, Series.Name) %>%
+  summarize(Value = first(Value), .groups = "drop") %>%
   pivot_wider(
-    names_from = Series.Name,   # Columns to become new column names
-    values_from = Value         # Values to fill the new columns
+    names_from = Series.Name,     # Use Series.Name to create new columns
+    values_from = Value,          # Fill the new columns with the corresponding Value
+    values_fn = list(Value = first)  # In case of multiple values, take the first one (or change as needed)
   )
 
-# Removing redundant country columns
+# Removing redundant country columns, updating NA values
 wb_data <- wb_data %>%
   select(-Country.Name, -Series.Code)
+
+wb_data <- wb_data %>%
+  mutate(Value = na_if(Value, ".."))
 
 # Look into the WB data columns to determine potential analyses
 wb_cols <- data.frame(colnames(wb_data))
