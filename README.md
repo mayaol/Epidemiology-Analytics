@@ -14,9 +14,10 @@ This is my first introductory analysis, using basic functions in R with the dply
 **professional_dev/portfolio/analytics/analysis_02**
 
 After an initial introduction to population data with Analysis_01, I will build on this knowledge by incorporating variables from the World Bank dataset, which focuses on various job & occupational variables.
+- 01 - Plot national GDP (gross domestic product) for each country
 
 -----------------------------------------------------------------------
 Sources Used
 
-UN World Population Prospects 2024 - https://population.un.org/wpp/Download/Standard/MostUsed/
-World Bank Open Data - https://data.worldbank.org/
+- UN World Population Prospects 2024 - https://population.un.org/wpp/Download/Standard/MostUsed/
+- World Bank Open Data - https://data.worldbank.org/
