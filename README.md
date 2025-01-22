@@ -21,3 +21,4 @@ Sources Used
 
 - UN World Population Prospects 2024 - https://population.un.org/wpp/Download/Standard/MostUsed/
 - World Bank Open Data - https://data.worldbank.org/
+- US Census Bureau Public Use Microdata Sample (PUMS) - https://www.census.gov/programs-surveys/acs/microdata.html
