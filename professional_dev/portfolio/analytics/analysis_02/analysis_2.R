@@ -24,7 +24,7 @@ un_data <- un_data %>%
   filter(ISO3_code != "")
 
 wb_data <- wb_data %>%
-  filter(Country.Code %in% iso3_codes)
+  filter(Country.Code %in% un_data$ISO3_code)
 
 # WB data is in long format, need to reformat to wide format and update some variables along the way
 wb_data <- wb_data %>%
@@ -59,10 +59,7 @@ wb_data <- wb_data %>%
 
 # Removing redundant country columns, updating NA values
 wb_data <- wb_data %>%
-  select(-Country.Name, -Series.Code)
-
-wb_data <- wb_data %>%
-  mutate(Value = na_if(Value, ".."))
+  mutate(across(everything(), ~na_if(., '..')))
 
 # Look into the WB data columns to determine potential analyses
 wb_cols <- data.frame(colnames(wb_data))
@@ -79,31 +76,38 @@ wb_data <- wb_data %>%
     contains("GINI index")
   )
 
-# I will be using the GDP per capita, PPP as a way to rank economic productivity of a given country
-# Remove all rows where GDP is not reported (and rename variable for readability)
-wb_data_gdp <- wb_data %>%
-  filter(!is.na(`GDP per capita, PPP (constant 2011 international $)`))
-
-wb_data_gdp <- wb_data_gdp %>%
-  rename(gdp = `GDP per capita, PPP (constant 2011 international $)`)
-
 # Next, I will merge together the WB data with the UN data to create one singular dataframe
+# WB Data only goes from 1990 to 2016, so removing all other years from UN data
+un_data <- un_data %>%
+  mutate(Time = as.numeric(Time)) %>%
+  filter(Time >= 1990 & Time <= 2016)
+
 un_data <- un_data %>%
   select(-SortOrder, -LocID, -Notes, -ISO2_code, -SDMX_code, -LocTypeID, -LocTypeName, -ParentID, -VarID,
          -Variant)
 
 un_data <- un_data %>%
-  filter(ISO3_code %in% iso3_codes)
+  mutate(Time = as.numeric(Time))
+wb_data <- wb_data %>%
+  mutate(Year = as.numeric(Year))
 
-wb_data_gdp <- left_join(un_data, wb_data_gdp, by = c("ISO3_code" = "Country.Code", "Time" = "Year"))
+wb_un_data <- left_join(un_data, wb_data, by = c("ISO3_code" = "Country.Code", "Time" = "Year"))
 
-# WB Data only goes from 1990 to 2016, so removing all other rows
-wb_data_gdp <- wb_data_gdp %>%
-  mutate(Time = as.numeric(Time)) %>%
-  filter(Time >= 1990 & Time <= 2016)
+# Removing any columns where more than 50% of the rows are NA, for readability
+wb_un_data <- wb_un_data %>%
+  select(where(~ mean(is.na(.)) <= 0.5))
 
 # 1.1 - Create a scatter plot comparing each country's GDP per capita
 # Subsetting by year = 2016, and analyzing by region
+
+# I will be using the GDP per capita, PPP as a way to rank economic productivity of a given country
+# Remove all rows where GDP is not reported (and rename variable for readability)
+wb_data_gdp <- wb_un_data %>%
+  filter(!is.na(`GDP per capita, PPP (constant 2011 international $)`))
+
+wb_data_gdp <- wb_data_gdp %>%
+  rename(gdp = `GDP per capita, PPP (constant 2011 international $)`)
+
 wb_data_gdp_2016 <- filter(wb_data_gdp, Time == 2016)
 wb_data_gdp_2016 <- wb_data_gdp_2016[ , !duplicated(colnames(wb_data_gdp_2016))]
 wb_data_gdp_2016 <- wb_data_gdp_2016 %>%
@@ -151,3 +155,7 @@ for (loc in loc_names){
 
 # Close the PDF device
 dev.off()
+
+# 1.2 - Create a scatter plot comparing each country's infant mortality rate (IMR)
+# with primary school enrollment rate
+# Subsetting by year = 2016
