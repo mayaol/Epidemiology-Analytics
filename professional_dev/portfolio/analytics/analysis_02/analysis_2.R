@@ -169,7 +169,10 @@ wb_un_2016 <- wb_un_2016 %>%
 # Plot the IMR vs primary school enrollment rate for each country
 imr_school <- ggplot(wb_un_2016, aes(x = `School enrollment, primary (% gross)`, y = IMR)) +
   geom_point(color = "blue", size = 2) +
-  labs(title = "Country infant mortality rate (IMR) vs primary school enrollment rate", x = "School enrollment, primary (% gross)", y = "IMR") + 
+  labs(title = "Country infant mortality rate (IMR) vs primary school enrollment rate", 
+       x = "School enrollment, primary (% gross)", y = "IMR") + 
   scale_x_continuous(limits = c(60, 120), breaks = seq(60, 120, by = 20)) + 
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) + 
   ylab("IMR (deaths per 1,000 live births)")
+
+# Next: Above the plot, add labels for the outliers, then remove them from a subset of the df and use a correlation analysis on the rest to determine potential relationship
