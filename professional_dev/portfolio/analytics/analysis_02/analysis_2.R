@@ -158,4 +158,18 @@ dev.off()
 
 # 1.2 - Create a scatter plot comparing each country's infant mortality rate (IMR)
 # with primary school enrollment rate
-# Subsetting by year = 2016
+# Subsetting by year = 2016, converting relevant vars to numeric
+wb_un_2016 <- wb_un_data %>%
+  filter(Time == 2016)
+
+wb_un_2016 <- wb_un_2016 %>%
+  mutate(`School enrollment, primary (% gross)` = as.numeric(`School enrollment, primary (% gross)`),
+    IMR = as.numeric(IMR))
+
+# Plot the IMR vs primary school enrollment rate for each country
+imr_school <- ggplot(wb_un_2016, aes(x = `School enrollment, primary (% gross)`, y = IMR)) +
+  geom_point(color = "blue", size = 2) +
+  labs(title = "Country infant mortality rate (IMR) vs primary school enrollment rate", x = "School enrollment, primary (% gross)", y = "IMR") + 
+  scale_x_continuous(limits = c(60, 120), breaks = seq(60, 120, by = 20)) + 
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) + 
+  ylab("IMR (deaths per 1,000 live births)")
